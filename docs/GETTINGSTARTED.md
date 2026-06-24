@@ -165,6 +165,33 @@ Notes:
 - Advanced Security tools are disabled on-premises. Code Search requires the Search extension to be installed on the collection.
 - Windows Integrated Auth (NTLM/Kerberos) is not supported — a PAT is required.
 
+### 📦 Standalone Binary (no Node.js required)
+
+Prebuilt, self-contained executables are attached to each [GitHub Release](https://github.com/codanael/azure-devops-mcp/releases): `azure-devops-mcp-linux-x64` (Linux x64) and `azure-devops-mcp-windows-x64.exe` (Windows x64). They embed the runtime, so the target machine needs **no Node.js**. This is the recommended option for locked-down or **air-gapped on-premises** environments.
+
+Download the binary for your platform (verify it against `SHA256SUMS`), make it executable (`chmod +x azure-devops-mcp-linux-x64` on Linux), then point your MCP client's `command` at its absolute path:
+
+```json
+{
+  "servers": {
+    "ado": {
+      "command": "/opt/azure-devops-mcp/azure-devops-mcp-linux-x64",
+      "args": ["https://tfs.contoso.com/DefaultCollection", "--authentication", "pat"],
+      "env": {
+        "PERSONAL_ACCESS_TOKEN": "<base64encoded email:pat>"
+      }
+    }
+  }
+}
+```
+
+Notes:
+
+- The positional argument is the same as for `npx`: a cloud organization name or an on-premises collection URL.
+- `pat` and `env` authentication work fully offline. `interactive` and `azcli` still function but require network access / the `az` CLI, so prefer PAT in air-gapped environments.
+- On Windows, SmartScreen/Defender may warn the first time you run the unsigned `.exe`.
+- Each binary is roughly 100–120 MB because it bundles the runtime.
+
 ## 🍕 Installation Options
 
 ### ➡️ Visual Studio Code & GitHub Copilot

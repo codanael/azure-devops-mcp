@@ -21,13 +21,16 @@
           # through the project's devDependencies via `npm install`.
           packages = with pkgs; [
             nodejs_22
+            bun
             git
+            patchelf
           ];
 
           shellHook = ''
             echo "azure-devops-mcp dev shell"
             echo "  node $(node --version), npm $(npm --version)"
-            echo "  run 'npm install' then 'npm run build' / 'npm test'"
+            echo "  bun $(bun --version)"
+            echo "  run 'npm install' then 'npm run build' / 'npm test' / 'npm run package'"
           '';
         };
       }
