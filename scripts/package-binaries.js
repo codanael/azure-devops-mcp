@@ -3,6 +3,11 @@
 
 // Compile the built server (dist/index.js) into self-contained executables
 // with `bun build --compile`. Cross-compiles all targets from one host.
+//
+// As an intentional local-dev affordance, on NixOS hosts this also patches the
+// compiled Linux binary's ELF interpreter so it can run on the build machine.
+// That step is gated on /etc/NIXOS and therefore never runs in CI (ubuntu), so
+// the released binaries keep the portable default interpreter.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -48,8 +53,10 @@ if (existsSync("/etc/NIXOS") && process.platform === "linux") {
     const currentInterp = patchelf.stdout.trim();
     // Borrow the interpreter from the Node executable: it's correct for this Nix env.
     const nodeInterp = spawnSync("patchelf", ["--print-interpreter", process.execPath], { encoding: "utf8" });
-    const nixInterp = nodeInterp.stdout.trim();
-    if (nixInterp && currentInterp !== nixInterp && existsSync(nixInterp)) {
+    const nixInterp = nodeInterp.stdout?.trim() ?? "";
+    if (!nixInterp) {
+      console.error("could not determine the Nix ELF interpreter from Node — skipping patch (binary may not run on this host)");
+    } else if (currentInterp !== nixInterp && existsSync(nixInterp)) {
       console.error(`NixOS: patching ELF interpreter ${currentInterp} -> ${nixInterp}`);
       const patch = spawnSync("patchelf", ["--set-interpreter", nixInterp, linuxBin], { stdio: "inherit" });
       if (patch.status !== 0) {

@@ -382,7 +382,7 @@ Notes:
 - The positional argument is the same as for `npx`: a cloud organization name or an on-premises collection URL.
 - `pat` and `env` authentication work fully offline. `interactive` and `azcli` still function but require network access / the `az` CLI, so prefer PAT in air-gapped environments.
 - On Windows, SmartScreen/Defender may warn the first time you run the unsigned `.exe`.
-- Each binary is roughly 60–90 MB because it bundles the runtime.
+- Each binary is roughly 100–120 MB because it bundles the runtime.
 ````
 
 - [ ] **Step 2: Document the `package` command in CLAUDE.md**

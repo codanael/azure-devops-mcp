@@ -79,7 +79,7 @@ New `.github/workflows/release-binaries.yml`:
 
 - **CPU compatibility:** the `-baseline` Linux target avoids AVX2-instruction `SIGILL` crashes on older or virtualized CPUs.
 - **Windows SmartScreen / Defender:** the unsigned `.exe` may trigger a warning on first run; documented as a known limitation (code signing is out of scope).
-- **Binary size:** each artifact is ~60–90 MB (embedded runtime); documented so the size is expected, not alarming.
+- **Binary size:** each artifact is ~100–120 MB (embedded runtime); documented so the size is expected, not alarming.
 - **Future native dependency:** if a dependency that ships a native addon is later added, `bun build --compile` may need extra handling; noted for maintainers.
 
 ## Testing
