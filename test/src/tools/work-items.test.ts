@@ -5015,6 +5015,7 @@ function commentUrl(orgUrl: string, project: string, workItemId: number, formatP
 }
 
 describe("work item comment URL", () => {
+  beforeEach(() => setDeployment(resolveDeployment("contoso")));
   afterEach(() => setDeployment(resolveDeployment("contoso")));
 
   it("includes format on cloud", () => {

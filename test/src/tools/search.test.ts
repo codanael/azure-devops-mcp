@@ -5,6 +5,8 @@ import { getSearchBaseUrl, getApiVersion } from "../../../src/utils";
 import { setDeployment, resolveDeployment } from "../../../src/shared/deployment";
 
 describe("search URL construction", () => {
+  afterEach(() => setDeployment(resolveDeployment("contoso"))); // reset singleton to cloud
+
   it("builds a cloud code search URL", () => {
     setDeployment(resolveDeployment("contoso"));
     const url = `${getSearchBaseUrl("https://dev.azure.com/contoso")}/_apis/search/codesearchresults?api-version=${getApiVersion()}`;
