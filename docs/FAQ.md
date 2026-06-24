@@ -4,7 +4,15 @@ Before you get started, ensure you follow the steps in the `README.md` file. Thi
 
 ## Does the MCP Server support both Azure DevOps Services and on-premises deployments?
 
-This MCP Server supports only Azure DevOps Services. Several required API endpoints are not yet available for on-premises deployments. We currently do not have plans to support Azure DevOps on-prem.
+Azure DevOps Services (cloud) is fully supported. **Azure DevOps Server (on-premises) 2022 is supported** with the following setup and limitations:
+
+- Pass the full collection URL instead of an organization name, e.g. `mcp-server-azuredevops https://tfs.contoso.com/DefaultCollection`.
+- Authentication is **PAT only** — set `--authentication pat` (implied automatically when a URL is given) and the `PERSONAL_ACCESS_TOKEN` environment variable to a base64-encoded `<email>:<pat>` value. Microsoft Entra sign-in (`interactive`/`azcli`/`env`) is not available on-prem.
+- The REST API version defaults to `7.0` (Azure DevOps Server 2022). Override with `--api-version 7.1` (Server 2022.1) or `6.0` (Server 2020).
+- **Advanced Security** tools are disabled on-prem (cloud-only product).
+- **Code Search** requires the Search extension installed on the target collection.
+- **Markdown** work item comments fall back to the server default format on-prem.
+- Windows Integrated Auth (NTLM/Kerberos) is not supported; a PAT is required.
 
 ## Can I connect to more than one organization at a time?
 
