@@ -23,6 +23,7 @@
             nodejs_22
             bun
             git
+            patchelf
           ];
 
           shellHook = ''
