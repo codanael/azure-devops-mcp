@@ -5,7 +5,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebApi } from "azure-devops-node-api";
 import { z } from "zod";
 import { WikiPagesBatchRequest } from "azure-devops-node-api/interfaces/WikiInterfaces.js";
-import { apiVersion, extractAdoStreamError, getOrgFromUrl } from "../utils.js";
+import { getApiVersion, extractAdoStreamError, getOrgIdentity } from "../utils.js";
 import { createExternalContentResponse } from "../shared/content-safety.js";
 
 const WIKI_TOOLS = {
@@ -145,7 +145,7 @@ function configureWikiTools(server: McpServer, tokenProvider: () => Promise<stri
         const baseUrl = connection.serverUrl.replace(/\/$/, "");
         const params = new URLSearchParams({
           "path": normalizedPath,
-          "api-version": apiVersion,
+          "api-version": getApiVersion(),
         });
 
         if (recursionLevel) {
@@ -225,8 +225,8 @@ function configureWikiTools(server: McpServer, tokenProvider: () => Promise<stri
           // Guard against cross-organization requests: a user-supplied URL must target the
           // same organization the server is connected to. Otherwise the org segment in the
           // URL would be silently ignored and content fetched from the configured org instead.
-          const configuredOrg = getOrgFromUrl(connection.serverUrl);
-          const urlOrg = getOrgFromUrl(url);
+          const configuredOrg = getOrgIdentity(connection.serverUrl);
+          const urlOrg = getOrgIdentity(url);
           if (configuredOrg && urlOrg !== configuredOrg) {
             return {
               content: [
@@ -250,7 +250,7 @@ function configureWikiTools(server: McpServer, tokenProvider: () => Promise<stri
             try {
               const accessToken = await tokenProvider();
               const baseUrl = connection.serverUrl.replace(/\/$/, "");
-              const restUrl = `${baseUrl}/${encodeURIComponent(resolvedProject)}/_apis/wiki/wikis/${encodeURIComponent(resolvedWiki)}/pages/${parsed.pageId}?includeContent=true&api-version=7.1`;
+              const restUrl = `${baseUrl}/${encodeURIComponent(resolvedProject)}/_apis/wiki/wikis/${encodeURIComponent(resolvedWiki)}/pages/${parsed.pageId}?includeContent=true&api-version=${getApiVersion()}`;
               const resp = await fetch(restUrl, {
                 headers: {
                   "Authorization": `Bearer ${accessToken}`,
@@ -329,7 +329,7 @@ function configureWikiTools(server: McpServer, tokenProvider: () => Promise<stri
         // Build the URL for the wiki page API with version descriptor
         const baseUrl = connection.serverUrl;
         const projectParam = project || "";
-        const url = `${baseUrl}/${encodeURIComponent(projectParam)}/_apis/wiki/wikis/${encodeURIComponent(wikiIdentifier)}/pages?path=${encodedPath}&versionDescriptor.versionType=branch&versionDescriptor.version=${encodeURIComponent(branch)}&api-version=7.1`;
+        const url = `${baseUrl}/${encodeURIComponent(projectParam)}/_apis/wiki/wikis/${encodeURIComponent(wikiIdentifier)}/pages?path=${encodedPath}&versionDescriptor.versionType=branch&versionDescriptor.version=${encodeURIComponent(branch)}&api-version=${getApiVersion()}`;
 
         // First, try to create a new page (PUT without ETag)
         try {

@@ -5,6 +5,7 @@ import { describe, expect, it } from "@jest/globals";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebApi } from "azure-devops-node-api";
 import { configureWikiTools } from "../../../src/tools/wiki";
+import { getOrgIdentity } from "../../../src/utils";
 
 type TokenProviderMock = () => Promise<string>;
 type ConnectionProviderMock = () => Promise<WebApi>;
@@ -1205,7 +1206,7 @@ describe("configureWikiTools", () => {
       const result = await handler(params);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://dev.azure.com/testorg/proj1/_apis/wiki/wikis/wiki1/pages?path=%2FHome&versionDescriptor.versionType=branch&versionDescriptor.version=wikiMaster&api-version=7.1",
+        "https://dev.azure.com/testorg/proj1/_apis/wiki/wikis/wiki1/pages?path=%2FHome&versionDescriptor.versionType=branch&versionDescriptor.version=wikiMaster&api-version=7.2-preview.1",
         {
           method: "PUT",
           headers: {
@@ -1631,7 +1632,7 @@ describe("configureWikiTools", () => {
       const result = await handler(params);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://dev.azure.com/testorg/proj1/_apis/wiki/wikis/wiki1/pages?path=%2FHome&versionDescriptor.versionType=branch&versionDescriptor.version=wikiMaster&api-version=7.1",
+        "https://dev.azure.com/testorg/proj1/_apis/wiki/wikis/wiki1/pages?path=%2FHome&versionDescriptor.versionType=branch&versionDescriptor.version=wikiMaster&api-version=7.2-preview.1",
         expect.any(Object)
       );
       expect(result.content[0].text).toContain("Successfully created wiki page at path: /Home");
@@ -1664,7 +1665,7 @@ describe("configureWikiTools", () => {
       const result = await handler(params);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://dev.azure.com/testorg//_apis/wiki/wikis/wiki1/pages?path=%2FHome&versionDescriptor.versionType=branch&versionDescriptor.version=wikiMaster&api-version=7.1",
+        "https://dev.azure.com/testorg//_apis/wiki/wikis/wiki1/pages?path=%2FHome&versionDescriptor.versionType=branch&versionDescriptor.version=wikiMaster&api-version=7.2-preview.1",
         expect.any(Object)
       );
       expect(result.content[0].text).toContain("Successfully created wiki page at path: /Home");
@@ -1731,7 +1732,7 @@ describe("configureWikiTools", () => {
       const result = await handler(params);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "https://dev.azure.com/testorg/proj1/_apis/wiki/wikis/wiki1/pages?path=%2FHome&versionDescriptor.versionType=branch&versionDescriptor.version=main&api-version=7.1",
+        "https://dev.azure.com/testorg/proj1/_apis/wiki/wikis/wiki1/pages?path=%2FHome&versionDescriptor.versionType=branch&versionDescriptor.version=main&api-version=7.2-preview.1",
         {
           method: "PUT",
           headers: {
@@ -2105,6 +2106,19 @@ describe("configureWikiTools", () => {
       const nonce = text.match(/<<([0-9a-f]{32})>>/)?.[1];
       expect(nonce).toBeDefined();
       expect(text).toContain(`<</${nonce}>>`);
+    });
+  });
+
+  describe("wiki org-boundary identity", () => {
+    it("matches same on-prem collection", () => {
+      const a = getOrgIdentity("https://tfs.contoso.com/DefaultCollection");
+      const b = getOrgIdentity("https://tfs.contoso.com/DefaultCollection/Proj/_wiki/wikis/Proj.wiki");
+      expect(a).toBe(b);
+    });
+    it("differs across on-prem collections", () => {
+      const a = getOrgIdentity("https://tfs.contoso.com/CollectionA");
+      const b = getOrgIdentity("https://tfs.contoso.com/CollectionB");
+      expect(a).not.toBe(b);
     });
   });
 });
