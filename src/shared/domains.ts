@@ -28,10 +28,18 @@ export class DomainsManager {
   private static readonly AVAILABLE_DOMAINS = Object.values(Domain);
 
   private readonly enabledDomains: Set<string>;
+  private readonly isOnPrem: boolean;
 
-  constructor(domainsInput?: string | string[]) {
+  constructor(domainsInput?: string | string[], isOnPrem = false) {
     this.enabledDomains = new Set();
+    this.isOnPrem = isOnPrem;
     this.parseDomains(domainsInput);
+    if (this.isOnPrem && this.enabledDomains.has(Domain.ADVANCED_SECURITY)) {
+      logger.warn("Advanced Security is a cloud-only product; disabling the 'advanced-security' domain for on-premises.");
+    }
+    if (this.isOnPrem) {
+      this.enabledDomains.delete(Domain.ADVANCED_SECURITY);
+    }
   }
 
   /**
