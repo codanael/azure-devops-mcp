@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-export const apiVersion = "7.2-preview.1";
+import { getDeployment } from "./shared/deployment.js";
+
+/** The $batch envelope version is stable across cloud and on-prem. */
 export const batchApiVersion = "5.0";
-export const markdownCommentsApiVersion = "7.2-preview.4";
 
 export function createEnumMapping<T extends Record<string, string | number>>(enumObject: T): Record<string, T[keyof T]> {
   const mapping: Record<string, T[keyof T]> = {};
@@ -94,6 +95,59 @@ export function extractAdoStreamError(content: string): string | null {
     // Not JSON — not an ADO error response.
   }
   return null;
+}
+
+/** API version for general REST calls, mode-aware. */
+export function getApiVersion(): string {
+  return getDeployment().apiVersion;
+}
+
+/** API version for the work item comments endpoint, mode-aware. */
+export function getCommentsApiVersion(): string {
+  return getDeployment().commentsApiVersion;
+}
+
+/** True when the host is an Azure DevOps Services (cloud) host. */
+export function isCloudHost(host: string): boolean {
+  const h = host.toLowerCase();
+  return h === "dev.azure.com" || h.endsWith(".dev.azure.com") || h === "visualstudio.com" || h.endsWith(".visualstudio.com");
+}
+
+/** Base URL for the Search REST API: cloud uses the almsearch subdomain, on-prem uses the collection host. */
+export function getSearchBaseUrl(serverUrl: string): string {
+  const u = new URL(serverUrl);
+  if (isCloudHost(u.hostname)) {
+    const org = getOrgFromUrl(serverUrl);
+    return `https://almsearch.dev.azure.com/${org}`;
+  }
+  return serverUrl.replace(/\/+$/, "");
+}
+
+/** Base URL for the Identities REST API: cloud uses the vssps subdomain, on-prem uses the collection host. */
+export function getIdentitiesBaseUrl(serverUrl: string): string {
+  const u = new URL(serverUrl);
+  if (isCloudHost(u.hostname)) {
+    const org = getOrgFromUrl(serverUrl);
+    return `https://vssps.dev.azure.com/${org}`;
+  }
+  return serverUrl.replace(/\/+$/, "");
+}
+
+/**
+ * Stable organization/collection identity for cross-boundary checks.
+ * Cloud: the org name (same as getOrgFromUrl). On-prem: host/collection.
+ */
+export function getOrgIdentity(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (isCloudHost(u.hostname)) {
+      return getOrgFromUrl(url);
+    }
+    const firstSegment = u.pathname.split("/").filter(Boolean)[0];
+    return firstSegment ? `${u.hostname.toLowerCase()}/${firstSegment.toLowerCase()}` : null;
+  } catch {
+    return null;
+  }
 }
 
 /**

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { DomainsManager } from "../../src/shared/domains";
+import { DomainsManager, Domain } from "../../src/shared/domains";
 import { logger } from "../../src/logger";
 
 jest.mock("../../src/logger.js", () => ({
@@ -353,5 +353,21 @@ describe("DomainsManager: backward compatibility and domain enabling", () => {
       const enabledDomains = manager.getEnabledDomains();
       expect(enabledDomains.size).toBe(9);
     });
+  });
+});
+
+describe("on-prem domain gating", () => {
+  it("excludes advanced-security when on-prem and 'all'", () => {
+    const m = new DomainsManager("all", true);
+    expect(m.isDomainEnabled(Domain.ADVANCED_SECURITY)).toBe(false);
+    expect(m.isDomainEnabled(Domain.REPOSITORIES)).toBe(true);
+  });
+  it("keeps advanced-security for cloud 'all'", () => {
+    const m = new DomainsManager("all", false);
+    expect(m.isDomainEnabled(Domain.ADVANCED_SECURITY)).toBe(true);
+  });
+  it("drops an explicit advanced-security request on-prem", () => {
+    const m = new DomainsManager("advanced-security", true);
+    expect(m.isDomainEnabled(Domain.ADVANCED_SECURITY)).toBe(false);
   });
 });

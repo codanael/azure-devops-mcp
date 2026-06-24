@@ -9,6 +9,8 @@ import { Readable } from "stream";
 import * as fs from "fs";
 import * as path from "path";
 import { QueryExpand } from "azure-devops-node-api/interfaces/WorkItemTrackingInterfaces.js";
+import { getCommentsApiVersion } from "../../../src/utils";
+import { getDeployment, setDeployment, resolveDeployment } from "../../../src/shared/deployment";
 
 jest.mock("fs");
 import {
@@ -5004,5 +5006,24 @@ describe("configureWorkItemTools", () => {
       const result = await handler({ project: "P", workItemId: 1, top: 10 });
       expect(result.content[0].text).toBe(JSON.stringify(revisionsWithNoFields, null, 2));
     });
+  });
+});
+
+function commentUrl(orgUrl: string, project: string, workItemId: number, formatParameter: number): string {
+  const formatSegment = getDeployment().isOnPrem ? "" : `format=${formatParameter}&`;
+  return `${orgUrl}/${encodeURIComponent(project)}/_apis/wit/workItems/${workItemId}/comments?${formatSegment}api-version=${getCommentsApiVersion()}`;
+}
+
+describe("work item comment URL", () => {
+  beforeEach(() => setDeployment(resolveDeployment("contoso")));
+  afterEach(() => setDeployment(resolveDeployment("contoso")));
+
+  it("includes format on cloud", () => {
+    setDeployment(resolveDeployment("contoso"));
+    expect(commentUrl("https://dev.azure.com/contoso", "Proj", 5, 0)).toBe("https://dev.azure.com/contoso/Proj/_apis/wit/workItems/5/comments?format=0&api-version=7.2-preview.4");
+  });
+  it("omits format on-prem and uses the preview.4 version", () => {
+    setDeployment(resolveDeployment("https://tfs.contoso.com/DefaultCollection"));
+    expect(commentUrl("https://tfs.contoso.com/DefaultCollection", "Proj", 5, 0)).toBe("https://tfs.contoso.com/DefaultCollection/Proj/_apis/wit/workItems/5/comments?api-version=7.1-preview.4");
   });
 });

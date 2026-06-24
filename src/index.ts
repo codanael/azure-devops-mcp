@@ -17,12 +17,11 @@ import { configureAllTools } from "./tools.js";
 import { UserAgentComposer } from "./useragent.js";
 import { packageVersion } from "./version.js";
 import { DomainsManager } from "./shared/domains.js";
+import { resolveDeployment, resolveAuthentication, setDeployment } from "./shared/deployment.js";
 
 function isGitHubCodespaceEnv(): boolean {
   return process.env.CODESPACES === "true" && !!process.env.CODESPACE_NAME;
 }
-
-const defaultAuthenticationType = isGitHubCodespaceEnv() ? "azcli" : "interactive";
 
 // Parse command line arguments using yargs
 const argv = yargs(hideBin(process.argv))
@@ -48,21 +47,30 @@ const argv = yargs(hideBin(process.argv))
     describe: "Type of authentication to use",
     type: "string",
     choices: ["interactive", "azcli", "env", "envvar", "pat"],
-    default: defaultAuthenticationType,
   })
   .option("tenant", {
     alias: "t",
     describe: "Azure tenant ID (optional, applied when using 'interactive' and 'azcli' type of authentication)",
     type: "string",
   })
+  .option("api-version", {
+    describe: "Override the REST API version (on-premises only). Defaults to 7.0 for Azure DevOps Server 2022.",
+    type: "string",
+  })
   .help()
   .parseSync();
 
-export const orgName = argv.organization as string;
-const orgUrl = "https://dev.azure.com/" + orgName;
+const positional = argv.organization as string;
+const deployment = resolveDeployment(positional, argv["api-version"] as string | undefined);
+setDeployment(deployment);
 
-const domainsManager = new DomainsManager(argv.domains);
+export const orgName = deployment.isOnPrem ? deployment.orgIdentifier : positional;
+const orgUrl = deployment.baseUrl;
+
+const domainsManager = new DomainsManager(argv.domains, deployment.isOnPrem);
 export const enabledDomains = domainsManager.getEnabledDomains();
+
+const authType = resolveAuthentication(argv.authentication as string | undefined, deployment.isOnPrem, isGitHubCodespaceEnv());
 
 function getAzureDevOpsClient(getAzureDevOpsToken: () => Promise<string>, userAgentComposer: UserAgentComposer, authType: string): () => Promise<WebApi> {
   return async () => {
@@ -83,7 +91,7 @@ async function main() {
   logger.info("Starting Azure DevOps MCP Server", {
     organization: orgName,
     organizationUrl: orgUrl,
-    authentication: argv.authentication,
+    authentication: authType,
     tenant: argv.tenant,
     domains: argv.domains,
     enabledDomains: Array.from(enabledDomains),
@@ -105,10 +113,10 @@ async function main() {
   server.server.oninitialized = () => {
     userAgentComposer.appendMcpClientInfo(server.server.getClientVersion());
   };
-  const tenantId = (await getOrgTenant(orgName)) ?? argv.tenant;
-  const authenticator = createAuthenticator(argv.authentication, tenantId);
+  const tenantId = deployment.isOnPrem ? undefined : ((await getOrgTenant(orgName)) ?? (argv.tenant as string | undefined));
+  const authenticator = createAuthenticator(authType, tenantId);
 
-  if (argv.authentication === "pat") {
+  if (authType === "pat") {
     const basicValue = await authenticator();
     // basicValue is already base64("{email}:{token}") — use it directly in the Authorization header
     const _originalFetch = globalThis.fetch;
@@ -128,7 +136,7 @@ async function main() {
   // removing prompts until further notice
   // configurePrompts(server);
 
-  configureAllTools(server, authenticator, getAzureDevOpsClient(authenticator, userAgentComposer, argv.authentication), () => userAgentComposer.userAgent, enabledDomains);
+  configureAllTools(server, authenticator, getAzureDevOpsClient(authenticator, userAgentComposer, authType), () => userAgentComposer.userAgent, enabledDomains);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

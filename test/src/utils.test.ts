@@ -2,7 +2,22 @@
 // Licensed under the MIT License.
 
 import { AlertType, AlertValidityStatus, Confidence, Severity, State } from "azure-devops-node-api/interfaces/AlertInterfaces";
-import { createEnumMapping, encodeFormattedValue, extractAdoStreamError, getEnumKeys, getOrgFromUrl, mapStringArrayToEnum, mapStringToEnum, safeEnumConvert } from "../../src/utils";
+import {
+  createEnumMapping,
+  encodeFormattedValue,
+  extractAdoStreamError,
+  getEnumKeys,
+  getOrgFromUrl,
+  mapStringArrayToEnum,
+  mapStringToEnum,
+  safeEnumConvert,
+  getApiVersion,
+  getCommentsApiVersion,
+  getSearchBaseUrl,
+  getIdentitiesBaseUrl,
+  getOrgIdentity,
+} from "../../src/utils";
+import { setDeployment, resolveDeployment } from "../../src/shared/deployment";
 
 describe("utils", () => {
   describe("createEnumMapping", () => {
@@ -553,5 +568,47 @@ describe("getOrgFromUrl", () => {
   it("returns null when no org segment is present", () => {
     expect(getOrgFromUrl("https://dev.azure.com/")).toBeNull();
     expect(getOrgFromUrl("https://dev.azure.com")).toBeNull();
+  });
+});
+
+describe("mode-aware api versions", () => {
+  afterEach(() => setDeployment(resolveDeployment("contoso"))); // reset to cloud
+
+  it("returns cloud versions by default", () => {
+    setDeployment(resolveDeployment("contoso"));
+    expect(getApiVersion()).toBe("7.2-preview.1");
+    expect(getCommentsApiVersion()).toBe("7.2-preview.4");
+  });
+  it("returns on-prem versions on-prem", () => {
+    setDeployment(resolveDeployment("https://tfs.contoso.com/DefaultCollection"));
+    expect(getApiVersion()).toBe("7.0");
+    expect(getCommentsApiVersion()).toBe("7.1-preview.4");
+  });
+});
+
+describe("getSearchBaseUrl", () => {
+  it("uses the almsearch subdomain for cloud", () => {
+    expect(getSearchBaseUrl("https://dev.azure.com/contoso")).toBe("https://almsearch.dev.azure.com/contoso");
+  });
+  it("uses the collection host on-prem", () => {
+    expect(getSearchBaseUrl("https://tfs.contoso.com/DefaultCollection")).toBe("https://tfs.contoso.com/DefaultCollection");
+  });
+});
+
+describe("getIdentitiesBaseUrl", () => {
+  it("uses the vssps subdomain for cloud", () => {
+    expect(getIdentitiesBaseUrl("https://dev.azure.com/contoso")).toBe("https://vssps.dev.azure.com/contoso");
+  });
+  it("uses the collection host on-prem", () => {
+    expect(getIdentitiesBaseUrl("https://tfs.contoso.com/DefaultCollection")).toBe("https://tfs.contoso.com/DefaultCollection");
+  });
+});
+
+describe("getOrgIdentity", () => {
+  it("matches getOrgFromUrl for cloud hosts", () => {
+    expect(getOrgIdentity("https://dev.azure.com/contoso/_git/repo")).toBe("contoso");
+  });
+  it("returns host/collection for on-prem hosts", () => {
+    expect(getOrgIdentity("https://tfs.contoso.com/DefaultCollection/Project/_wiki")).toBe("tfs.contoso.com/defaultcollection");
   });
 });

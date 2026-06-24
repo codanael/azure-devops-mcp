@@ -140,6 +140,31 @@ The value stored in `PERSONAL_ACCESS_TOKEN` must be the base64 encoding of `<ema
 
 > **Security note:** Avoid hard-coding the PAT value directly in `mcp.json` when committing to source control. Prefer injecting it via an environment variable set outside the config file, or use a secrets manager.
 
+### 🏢 On-Premises (Azure DevOps Server)
+
+To target an on-premises Azure DevOps Server collection, pass the full **collection URL** as the positional argument instead of an organization name. On-premises mode uses **PAT authentication** automatically.
+
+```json
+{
+  "servers": {
+    "ado-onprem": {
+      "command": "npx",
+      "args": ["-y", "@azure-devops/mcp", "https://tfs.contoso.com/DefaultCollection", "--authentication", "pat"],
+      "env": {
+        "PERSONAL_ACCESS_TOKEN": "<base64encoded email:pat>"
+      }
+    }
+  }
+}
+```
+
+Notes:
+
+- The REST API version defaults to `7.0` (Azure DevOps Server 2022). Override with `--api-version 7.1` (Server 2022.1) or `--api-version 6.0` (Server 2020).
+- Microsoft Entra authentication (`interactive`, `azcli`, `env`) is not available on-premises; the server will exit with an error if one is requested alongside a collection URL.
+- Advanced Security tools are disabled on-premises. Code Search requires the Search extension to be installed on the collection.
+- Windows Integrated Auth (NTLM/Kerberos) is not supported — a PAT is required.
+
 ## 🍕 Installation Options
 
 ### ➡️ Visual Studio Code & GitHub Copilot

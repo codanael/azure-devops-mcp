@@ -4,6 +4,8 @@
 import { describe, expect, it, beforeEach, afterEach } from "@jest/globals";
 import { WebApi } from "azure-devops-node-api";
 import { getCurrentUserDetails, getUserIdFromEmail, searchIdentities } from "../../../src/tools/auth";
+import { getIdentitiesBaseUrl } from "../../../src/utils";
+import { setDeployment, resolveDeployment } from "../../../src/shared/deployment";
 
 type TokenProviderMock = () => Promise<string>;
 type ConnectionProviderMock = () => Promise<WebApi>;
@@ -319,5 +321,16 @@ describe("auth functions", () => {
 
       expect(result).toBe("user1-id");
     });
+  });
+});
+
+describe("identities URL construction", () => {
+  it("uses vssps for cloud", () => {
+    setDeployment(resolveDeployment("contoso"));
+    expect(getIdentitiesBaseUrl("https://dev.azure.com/contoso")).toBe("https://vssps.dev.azure.com/contoso");
+  });
+  it("uses the collection host on-prem", () => {
+    setDeployment(resolveDeployment("https://tfs.contoso.com/DefaultCollection"));
+    expect(getIdentitiesBaseUrl("https://tfs.contoso.com/DefaultCollection")).toBe("https://tfs.contoso.com/DefaultCollection");
   });
 });

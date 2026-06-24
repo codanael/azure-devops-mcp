@@ -8,7 +8,8 @@ import { WebApi } from "azure-devops-node-api";
 import { WorkItemExpand, WorkItemRelation } from "azure-devops-node-api/interfaces/WorkItemTrackingInterfaces.js";
 import { QueryExpand } from "azure-devops-node-api/interfaces/WorkItemTrackingInterfaces.js";
 import { z } from "zod";
-import { batchApiVersion, markdownCommentsApiVersion, getEnumKeys, safeEnumConvert, encodeFormattedValue } from "../utils.js";
+import { batchApiVersion, getCommentsApiVersion, getEnumKeys, safeEnumConvert, encodeFormattedValue } from "../utils.js";
+import { getDeployment } from "../shared/deployment.js";
 import { elicitProject, elicitTeam } from "../shared/elicitations.js";
 import { createExternalContentResponse } from "../shared/content-safety.js";
 
@@ -379,18 +380,17 @@ function configureWorkItemTools(server: McpServer, tokenProvider: () => Promise<
         };
 
         const formatParameter = (format ?? "Markdown") === "Markdown" ? 0 : 1;
-        const response = await fetch(
-          `${orgUrl}/${encodeURIComponent(resolvedProject)}/_apis/wit/workItems/${workItemId}/comments?format=${formatParameter}&api-version=${markdownCommentsApiVersion}`,
-          {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${accessToken}`,
-              "Content-Type": "application/json",
-              "User-Agent": userAgentProvider(),
-            },
-            body: JSON.stringify(body),
-          }
-        );
+        // On-prem: the `format` (markdown) parameter is cloud-first/preview-only; omit it so the comment posts as the server default.
+        const formatSegment = getDeployment().isOnPrem ? "" : `format=${formatParameter}&`;
+        const response = await fetch(`${orgUrl}/${encodeURIComponent(resolvedProject)}/_apis/wit/workItems/${workItemId}/comments?${formatSegment}api-version=${getCommentsApiVersion()}`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+            "User-Agent": userAgentProvider(),
+          },
+          body: JSON.stringify(body),
+        });
 
         if (!response.ok) {
           throw new Error(`Failed to add a work item comment: ${response.statusText}}`);
@@ -436,9 +436,10 @@ function configureWorkItemTools(server: McpServer, tokenProvider: () => Promise<
         const accessToken = await tokenProvider();
         const body: Record<string, string> = { text };
         const formatParameter = (format ?? "Markdown") === "Markdown" ? 0 : 1;
+        const formatSegment = getDeployment().isOnPrem ? "" : `format=${formatParameter}&`;
 
         const response = await fetch(
-          `${orgUrl}/${encodeURIComponent(resolvedProject)}/_apis/wit/workItems/${workItemId}/comments/${commentId}?format=${formatParameter}&api-version=${markdownCommentsApiVersion}`,
+          `${orgUrl}/${encodeURIComponent(resolvedProject)}/_apis/wit/workItems/${workItemId}/comments/${commentId}?${formatSegment}api-version=${getCommentsApiVersion()}`,
           {
             method: "PATCH",
             headers: {
