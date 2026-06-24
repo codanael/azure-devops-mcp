@@ -3,12 +3,8 @@
 
 import { getDeployment } from "./shared/deployment.js";
 
-/** @deprecated migrating to getApiVersion(); kept until all call sites are migrated. */
-export const apiVersion = "7.2-preview.1";
 /** The $batch envelope version is stable across cloud and on-prem. */
 export const batchApiVersion = "5.0";
-/** @deprecated migrating to getCommentsApiVersion(); kept until all call sites are migrated. */
-export const markdownCommentsApiVersion = "7.2-preview.4";
 
 export function createEnumMapping<T extends Record<string, string | number>>(enumObject: T): Record<string, T[keyof T]> {
   const mapping: Record<string, T[keyof T]> = {};

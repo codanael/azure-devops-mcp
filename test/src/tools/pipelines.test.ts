@@ -6,7 +6,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebApi } from "azure-devops-node-api";
 import { StageUpdateType } from "azure-devops-node-api/interfaces/BuildInterfaces.js";
 import { configurePipelineTools } from "../../../src/tools/pipelines";
-import { apiVersion } from "../../../src/utils.js";
+import { getApiVersion } from "../../../src/utils.js";
 import { mockUpdateBuildStageResponse, mockMultipleArtifacts, mockArtifact } from "../../mocks/pipelines";
 import { Readable } from "stream";
 import { resolve } from "path";
@@ -75,7 +75,7 @@ describe("configurePipelineTools", () => {
 
       const result = await handler(params);
 
-      expect(global.fetch).toHaveBeenCalledWith(`https://dev.azure.com/test-org/test-project/_apis/build/builds/123/stages/Build?api-version=${apiVersion}`, {
+      expect(global.fetch).toHaveBeenCalledWith(`https://dev.azure.com/test-org/test-project/_apis/build/builds/123/stages/Build?api-version=${getApiVersion()}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -118,7 +118,7 @@ describe("configurePipelineTools", () => {
 
       await expect(handler(params)).rejects.toThrow("Failed to update build stage: 404 Build stage not found");
 
-      expect(global.fetch).toHaveBeenCalledWith(`https://dev.azure.com/test-org/test-project/_apis/build/builds/999/stages/NonExistentStage?api-version=${apiVersion}`, {
+      expect(global.fetch).toHaveBeenCalledWith(`https://dev.azure.com/test-org/test-project/_apis/build/builds/999/stages/NonExistentStage?api-version=${getApiVersion()}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -155,7 +155,7 @@ describe("configurePipelineTools", () => {
 
       await expect(handler(params)).rejects.toThrow("Network connection failed");
 
-      expect(global.fetch).toHaveBeenCalledWith(`https://dev.azure.com/test-org/test-project/_apis/build/builds/123/stages/Build?api-version=${apiVersion}`, {
+      expect(global.fetch).toHaveBeenCalledWith(`https://dev.azure.com/test-org/test-project/_apis/build/builds/123/stages/Build?api-version=${getApiVersion()}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

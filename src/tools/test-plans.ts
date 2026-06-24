@@ -5,7 +5,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebApi } from "azure-devops-node-api";
 import { TestPlanCreateParams } from "azure-devops-node-api/interfaces/TestPlanInterfaces.js";
 import { z } from "zod";
-import { apiVersion } from "../utils.js";
+import { getApiVersion } from "../utils.js";
 
 const Test_Plan_Tools = {
   create_test_plan: "testplan_create_test_plan",
@@ -33,7 +33,7 @@ function configureTestPlanTools(server: McpServer, tokenProvider: () => Promise<
       try {
         const connection = await connectionProvider();
         const accessToken = await tokenProvider();
-        const params = new URLSearchParams({ "api-version": apiVersion });
+        const params = new URLSearchParams({ "api-version": getApiVersion() });
         if (filterActivePlans) params.append("filterActivePlans", "true");
         if (includePlanDetails) params.append("includePlanDetails", "true");
         if (continuationToken) params.append("continuationToken", continuationToken);
@@ -495,7 +495,7 @@ function configureTestPlanTools(server: McpServer, tokenProvider: () => Promise<
       try {
         const connection = await connectionProvider();
         const accessToken = await tokenProvider();
-        const params = new URLSearchParams({ "api-version": apiVersion, "expand": "children" });
+        const params = new URLSearchParams({ "api-version": getApiVersion(), "expand": "children" });
         if (continuationToken) params.append("continuationToken", continuationToken);
         const url = `${connection.serverUrl}/${encodeURIComponent(project)}/_apis/testplan/Plans/${planId}/Suites?${params.toString()}`;
         const headers: Record<string, string> = {

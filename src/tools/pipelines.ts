@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { apiVersion, getEnumKeys, safeEnumConvert } from "../utils.js";
+import { getApiVersion, getEnumKeys, safeEnumConvert } from "../utils.js";
 import { WebApi } from "azure-devops-node-api";
 import { BuildQueryOrder, DefinitionQueryOrder } from "azure-devops-node-api/interfaces/BuildInterfaces.js";
 import { z } from "zod";
@@ -505,7 +505,7 @@ function configurePipelineTools(server: McpServer, tokenProvider: () => Promise<
     async ({ project, buildId, stageName, status, forceRetryAllJobs }) => {
       const connection = await connectionProvider();
       const orgUrl = connection.serverUrl;
-      const endpoint = `${orgUrl}/${encodeURIComponent(project)}/_apis/build/builds/${buildId}/stages/${encodeURIComponent(stageName)}?api-version=${apiVersion}`;
+      const endpoint = `${orgUrl}/${encodeURIComponent(project)}/_apis/build/builds/${buildId}/stages/${encodeURIComponent(stageName)}?api-version=${getApiVersion()}`;
       const token = await tokenProvider();
 
       const body = {
