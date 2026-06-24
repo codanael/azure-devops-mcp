@@ -30,6 +30,11 @@ describe("resolveDeployment", () => {
     const c = resolveDeployment("contoso", "6.0");
     expect(c.apiVersion).toBe("7.2-preview.1");
   });
+
+  it("treats a non-http URL as a cloud name (fallback)", () => {
+    const c = resolveDeployment("ftp://example.com/x");
+    expect(c.isOnPrem).toBe(false);
+  });
 });
 
 describe("resolveAuthentication", () => {

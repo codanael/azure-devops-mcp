@@ -21,25 +21,26 @@ These facts drive the plan. Sources verified during planning:
 
 ## File structure
 
-| File | Responsibility |
-|---|---|
-| `src/shared/deployment.ts` (new) | `DeploymentConfig` type, `resolveDeployment()`, `resolveAuthentication()`, singleton `setDeployment()`/`getDeployment()`. Pure logic. |
-| `src/utils.ts` (modify) | `getApiVersion()`/`getCommentsApiVersion()` (read singleton); host helpers `isCloudHost()`, `getSearchBaseUrl()`, `getIdentitiesBaseUrl()`, `getOrgIdentity()`. |
-| `src/shared/domains.ts` (modify) | `DomainsManager` accepts `isOnPrem`; excludes `advanced-security` on-prem. |
-| `src/tools/search.ts` (modify) | Use `getSearchBaseUrl()` + `getApiVersion()`; drop `orgName` import. |
-| `src/tools/auth.ts` (modify) | Use `getIdentitiesBaseUrl()` + `getApiVersion()`. |
-| `src/tools/work-items.ts` (modify) | Comments: omit `format` on-prem; use `getCommentsApiVersion()`. |
-| `src/tools/wiki.ts` (modify) | Boundary check uses `getOrgIdentity()`; version literals use `getApiVersion()`. |
-| `src/tools/pipelines.ts`, `src/tools/test-plans.ts` (modify) | Swap `apiVersion` → `getApiVersion()`. |
-| `src/index.ts` (modify) | Wire `resolveDeployment`/`resolveAuthentication`/`setDeployment`; `--api-version`; skip tenant lookup on-prem. |
-| `jest.config.cjs` (modify) | Map `deployment.js` → `deployment.ts`. |
-| `docs/FAQ.md`, `docs/GETTINGSTARTED.md` (modify) | Document on-prem usage + limitations. |
+| File                                                         | Responsibility                                                                                                                                                  |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/shared/deployment.ts` (new)                             | `DeploymentConfig` type, `resolveDeployment()`, `resolveAuthentication()`, singleton `setDeployment()`/`getDeployment()`. Pure logic.                           |
+| `src/utils.ts` (modify)                                      | `getApiVersion()`/`getCommentsApiVersion()` (read singleton); host helpers `isCloudHost()`, `getSearchBaseUrl()`, `getIdentitiesBaseUrl()`, `getOrgIdentity()`. |
+| `src/shared/domains.ts` (modify)                             | `DomainsManager` accepts `isOnPrem`; excludes `advanced-security` on-prem.                                                                                      |
+| `src/tools/search.ts` (modify)                               | Use `getSearchBaseUrl()` + `getApiVersion()`; drop `orgName` import.                                                                                            |
+| `src/tools/auth.ts` (modify)                                 | Use `getIdentitiesBaseUrl()` + `getApiVersion()`.                                                                                                               |
+| `src/tools/work-items.ts` (modify)                           | Comments: omit `format` on-prem; use `getCommentsApiVersion()`.                                                                                                 |
+| `src/tools/wiki.ts` (modify)                                 | Boundary check uses `getOrgIdentity()`; version literals use `getApiVersion()`.                                                                                 |
+| `src/tools/pipelines.ts`, `src/tools/test-plans.ts` (modify) | Swap `apiVersion` → `getApiVersion()`.                                                                                                                          |
+| `src/index.ts` (modify)                                      | Wire `resolveDeployment`/`resolveAuthentication`/`setDeployment`; `--api-version`; skip tenant lookup on-prem.                                                  |
+| `jest.config.cjs` (modify)                                   | Map `deployment.js` → `deployment.ts`.                                                                                                                          |
+| `docs/FAQ.md`, `docs/GETTINGSTARTED.md` (modify)             | Document on-prem usage + limitations.                                                                                                                           |
 
 ---
 
 ## Task 1: Deployment config module
 
 **Files:**
+
 - Create: `src/shared/deployment.ts`
 - Test: `test/src/deployment.test.ts`
 - Modify: `jest.config.cjs` (moduleNameMapper)
@@ -253,6 +254,7 @@ git commit -m "Add deployment config module for cloud/on-prem resolution"
 ## Task 2: Host-aware helpers in utils.ts
 
 **Files:**
+
 - Modify: `src/utils.ts` (lines 4-6 constants; add helpers)
 - Test: `test/src/utils.test.ts` (extend)
 
@@ -403,6 +405,7 @@ git commit -m "Add mode-aware api-version and host helpers to utils"
 ## Task 3: Rewrite Search tool hosts
 
 **Files:**
+
 - Modify: `src/tools/search.ts:8-9` (imports), `:39`, `:97`, `:151` (URLs)
 - Test: `test/src/tools/search.test.ts` (new)
 
@@ -454,16 +457,21 @@ import { getApiVersion, getSearchBaseUrl } from "../utils.js";
 - [ ] **Step 4: Edit the three search URLs**
 
 Line 39:
+
 ```ts
-      const url = `${getSearchBaseUrl(connection.serverUrl)}/_apis/search/codesearchresults?api-version=${getApiVersion()}`;
+const url = `${getSearchBaseUrl(connection.serverUrl)}/_apis/search/codesearchresults?api-version=${getApiVersion()}`;
 ```
+
 Line 97:
+
 ```ts
-      const url = `${getSearchBaseUrl(connection.serverUrl)}/_apis/search/wikisearchresults?api-version=${getApiVersion()}`;
+const url = `${getSearchBaseUrl(connection.serverUrl)}/_apis/search/wikisearchresults?api-version=${getApiVersion()}`;
 ```
+
 Line 151:
+
 ```ts
-      const url = `${getSearchBaseUrl(connection.serverUrl)}/_apis/search/workitemsearchresults?api-version=${getApiVersion()}`;
+const url = `${getSearchBaseUrl(connection.serverUrl)}/_apis/search/workitemsearchresults?api-version=${getApiVersion()}`;
 ```
 
 (`connection` is already obtained in each handler before the URL line — verify it is fetched above each; for `search_code` it is at line 38. For `search_wiki`/`search_workitem`, ensure `const connection = await connectionProvider();` precedes the URL; add it if absent.)
@@ -485,6 +493,7 @@ git commit -m "Route Search API through collection host on-prem"
 ## Task 4: Rewrite Identities tool host
 
 **Files:**
+
 - Modify: `src/tools/auth.ts:5` (import), `:37-41`
 - Test: `test/src/tools/auth.test.ts` (extend if present, else assert via helper)
 
@@ -522,6 +531,7 @@ import { getApiVersion, getIdentitiesBaseUrl } from "../utils.js";
 - [ ] **Step 4: Edit searchIdentities (lines 37-41)**
 
 Replace:
+
 ```ts
   const orgName = connection.serverUrl.split("/")[3];
   const baseUrl = `https://vssps.dev.azure.com/${orgName}/_apis/identities`;
@@ -529,7 +539,9 @@ Replace:
   const params = new URLSearchParams({
     "api-version": apiVersion,
 ```
+
 with:
+
 ```ts
   const baseUrl = `${getIdentitiesBaseUrl(connection.serverUrl)}/_apis/identities`;
 
@@ -554,6 +566,7 @@ git commit -m "Route Identities API through collection host on-prem"
 ## Task 5: Degrade work item comments on-prem
 
 **Files:**
+
 - Modify: `src/tools/work-items.ts:11` (import), `:381-383`, `:438-441`
 - Test: `test/src/tools/work-items.test.ts` (extend)
 
@@ -574,15 +587,11 @@ function commentUrl(orgUrl: string, project: string, workItemId: number, formatP
 describe("work item comment URL", () => {
   it("includes format on cloud", () => {
     setDeployment(resolveDeployment("contoso"));
-    expect(commentUrl("https://dev.azure.com/contoso", "Proj", 5, 0)).toBe(
-      "https://dev.azure.com/contoso/Proj/_apis/wit/workItems/5/comments?format=0&api-version=7.2-preview.4"
-    );
+    expect(commentUrl("https://dev.azure.com/contoso", "Proj", 5, 0)).toBe("https://dev.azure.com/contoso/Proj/_apis/wit/workItems/5/comments?format=0&api-version=7.2-preview.4");
   });
   it("omits format on-prem and uses the preview.4 version", () => {
     setDeployment(resolveDeployment("https://tfs.contoso.com/DefaultCollection"));
-    expect(commentUrl("https://tfs.contoso.com/DefaultCollection", "Proj", 5, 0)).toBe(
-      "https://tfs.contoso.com/DefaultCollection/Proj/_apis/wit/workItems/5/comments?api-version=7.1-preview.4"
-    );
+    expect(commentUrl("https://tfs.contoso.com/DefaultCollection", "Proj", 5, 0)).toBe("https://tfs.contoso.com/DefaultCollection/Proj/_apis/wit/workItems/5/comments?api-version=7.1-preview.4");
   });
 });
 ```
@@ -595,10 +604,13 @@ Expected: FAIL — `getCommentsApiVersion`/`getDeployment` not yet importable in
 - [ ] **Step 3: Edit work-items.ts import (line 11)**
 
 Replace:
+
 ```ts
 import { batchApiVersion, markdownCommentsApiVersion, getEnumKeys, safeEnumConvert, encodeFormattedValue } from "../utils.js";
 ```
+
 with:
+
 ```ts
 import { batchApiVersion, getCommentsApiVersion, getEnumKeys, safeEnumConvert, encodeFormattedValue } from "../utils.js";
 import { getDeployment } from "../shared/deployment.js";
@@ -607,12 +619,15 @@ import { getDeployment } from "../shared/deployment.js";
 - [ ] **Step 4: Edit add_work_item_comment URL (around lines 381-383)**
 
 Replace:
+
 ```ts
         const formatParameter = (format ?? "Markdown") === "Markdown" ? 0 : 1;
         const response = await fetch(
           `${orgUrl}/${encodeURIComponent(resolvedProject)}/_apis/wit/workItems/${workItemId}/comments?format=${formatParameter}&api-version=${markdownCommentsApiVersion}`,
 ```
+
 with:
+
 ```ts
         const formatParameter = (format ?? "Markdown") === "Markdown" ? 0 : 1;
         // On-prem: the `format` (markdown) parameter is cloud-first/preview-only; omit it so the comment posts as the server default.
@@ -624,13 +639,16 @@ with:
 - [ ] **Step 5: Edit update_work_item_comment URL (around lines 438-441)**
 
 Replace:
+
 ```ts
         const formatParameter = (format ?? "Markdown") === "Markdown" ? 0 : 1;
 
         const response = await fetch(
           `${orgUrl}/${encodeURIComponent(resolvedProject)}/_apis/wit/workItems/${workItemId}/comments/${commentId}?format=${formatParameter}&api-version=${markdownCommentsApiVersion}`,
 ```
+
 with:
+
 ```ts
         const formatParameter = (format ?? "Markdown") === "Markdown" ? 0 : 1;
         const formatSegment = getDeployment().isOnPrem ? "" : `format=${formatParameter}&`;
@@ -656,6 +674,7 @@ git commit -m "Omit cloud-only comment format param on-prem"
 ## Task 6: Wiki version + boundary check
 
 **Files:**
+
 - Modify: `src/tools/wiki.ts:8` (import), `:148`, `:228-229`, `:253`, `:332`
 - Test: `test/src/tools/wiki.test.ts` (extend)
 
@@ -688,10 +707,13 @@ Expected: PASS (helper from Task 2). Proceed to wire wiki.ts.
 - [ ] **Step 3: Edit wiki.ts import (line 8)**
 
 Replace:
+
 ```ts
 import { apiVersion, extractAdoStreamError, getOrgFromUrl } from "../utils.js";
 ```
+
 with:
+
 ```ts
 import { getApiVersion, extractAdoStreamError, getOrgIdentity } from "../utils.js";
 ```
@@ -699,6 +721,7 @@ import { getApiVersion, extractAdoStreamError, getOrgIdentity } from "../utils.j
 - [ ] **Step 4: Update the list-pages api-version (line 148)**
 
 Replace `"api-version": apiVersion,` with:
+
 ```ts
           "api-version": getApiVersion(),
 ```
@@ -706,25 +729,31 @@ Replace `"api-version": apiVersion,` with:
 - [ ] **Step 5: Update the boundary check (lines 228-229)**
 
 Replace:
+
 ```ts
-          const configuredOrg = getOrgFromUrl(connection.serverUrl);
-          const urlOrg = getOrgFromUrl(url);
+const configuredOrg = getOrgFromUrl(connection.serverUrl);
+const urlOrg = getOrgFromUrl(url);
 ```
+
 with:
+
 ```ts
-          const configuredOrg = getOrgIdentity(connection.serverUrl);
-          const urlOrg = getOrgIdentity(url);
+const configuredOrg = getOrgIdentity(connection.serverUrl);
+const urlOrg = getOrgIdentity(url);
 ```
 
 - [ ] **Step 6: Update the two hardcoded `api-version=7.1` literals (lines 253, 332)**
 
 In both URLs, replace `api-version=7.1` with `api-version=${getApiVersion()}`. Example for line 253:
+
 ```ts
-              const restUrl = `${baseUrl}/${encodeURIComponent(resolvedProject)}/_apis/wiki/wikis/${encodeURIComponent(resolvedWiki)}/pages/${parsed.pageId}?includeContent=true&api-version=${getApiVersion()}`;
+const restUrl = `${baseUrl}/${encodeURIComponent(resolvedProject)}/_apis/wiki/wikis/${encodeURIComponent(resolvedWiki)}/pages/${parsed.pageId}?includeContent=true&api-version=${getApiVersion()}`;
 ```
+
 And line 332:
+
 ```ts
-        const url = `${baseUrl}/${encodeURIComponent(projectParam)}/_apis/wiki/wikis/${encodeURIComponent(wikiIdentifier)}/pages?path=${encodedPath}&versionDescriptor.versionType=branch&versionDescriptor.version=${encodeURIComponent(branch)}&api-version=${getApiVersion()}`;
+const url = `${baseUrl}/${encodeURIComponent(projectParam)}/_apis/wiki/wikis/${encodeURIComponent(wikiIdentifier)}/pages?path=${encodedPath}&versionDescriptor.versionType=branch&versionDescriptor.version=${encodeURIComponent(branch)}&api-version=${getApiVersion()}`;
 ```
 
 - [ ] **Step 7: Run tests + typecheck**
@@ -744,22 +773,27 @@ git commit -m "Make wiki version and org-boundary check on-prem aware"
 ## Task 7: Pipelines + Test Plans version swap
 
 **Files:**
+
 - Modify: `src/tools/pipelines.ts:5,508`; `src/tools/test-plans.ts:8,36,498`
 
 - [ ] **Step 1: Edit pipelines.ts**
 
 Line 5 — replace `import { apiVersion, getEnumKeys, safeEnumConvert } from "../utils.js";` with:
+
 ```ts
 import { getApiVersion, getEnumKeys, safeEnumConvert } from "../utils.js";
 ```
+
 Line 508 — replace `?api-version=${apiVersion}` with `?api-version=${getApiVersion()}`.
 
 - [ ] **Step 2: Edit test-plans.ts**
 
 Line 8 — replace `import { apiVersion } from "../utils.js";` with:
+
 ```ts
 import { getApiVersion } from "../utils.js";
 ```
+
 Line 36 — `const params = new URLSearchParams({ "api-version": getApiVersion() });`
 Line 498 — `const params = new URLSearchParams({ "api-version": getApiVersion(), "expand": "children" });`
 
@@ -782,6 +816,7 @@ git commit -m "Use mode-aware api-version in pipelines and test plans"
 ## Task 8: Disable Advanced Security on-prem
 
 **Files:**
+
 - Modify: `src/shared/domains.ts` (constructor + `enableAllDomains` + `validateAndAddDomains`)
 - Test: `test/src/domains.test.ts` (extend)
 
@@ -819,6 +854,7 @@ Expected: FAIL — constructor takes one argument; advanced-security still enabl
 In `src/shared/domains.ts`:
 
 Change the field + constructor:
+
 ```ts
   private readonly enabledDomains: Set<string>;
   private readonly isOnPrem: boolean;
@@ -834,11 +870,13 @@ Change the field + constructor:
 ```
 
 The post-parse `delete` covers every path (`all`, explicit list, comma string), so no other method needs editing. Optionally log when dropping:
+
 ```ts
-    if (isOnPrem && this.enabledDomains.has(Domain.ADVANCED_SECURITY)) {
-      logger.warn("Advanced Security is a cloud-only product; disabling the 'advanced-security' domain for on-premises.");
-    }
+if (isOnPrem && this.enabledDomains.has(Domain.ADVANCED_SECURITY)) {
+  logger.warn("Advanced Security is a cloud-only product; disabling the 'advanced-security' domain for on-premises.");
+}
 ```
+
 (Place this check before the `delete`. `logger` is already imported.)
 
 - [ ] **Step 4: Run the test to verify it passes**
@@ -858,11 +896,13 @@ git commit -m "Disable Advanced Security domain on-prem"
 ## Task 9: Wire it all in index.ts
 
 **Files:**
+
 - Modify: `src/index.ts` (imports; module-level resolution; `--api-version`; `main()`)
 
 - [ ] **Step 1: Add imports**
 
 After the existing imports, add:
+
 ```ts
 import { resolveDeployment, resolveAuthentication, setDeployment } from "./shared/deployment.js";
 ```
@@ -870,6 +910,7 @@ import { resolveDeployment, resolveAuthentication, setDeployment } from "./share
 - [ ] **Step 2: Add the `--api-version` option**
 
 In the yargs chain (after the `tenant` option, before `.help()`), add:
+
 ```ts
   .option("api-version", {
     describe: "Override the REST API version (on-premises only). Defaults to 7.0 for Azure DevOps Server 2022.",
@@ -880,12 +921,15 @@ In the yargs chain (after the `tenant` option, before `.help()`), add:
 - [ ] **Step 3: Replace the static auth default + org/url/domains block**
 
 Replace:
+
 ```ts
 const defaultAuthenticationType = isGitHubCodespaceEnv() ? "azcli" : "interactive";
 ```
+
 — delete this line (resolution now happens via `resolveAuthentication`). In the `authentication` option, change `default: defaultAuthenticationType,` to omit the default (remove the `default` line entirely).
 
 Then replace:
+
 ```ts
 export const orgName = argv.organization as string;
 const orgUrl = "https://dev.azure.com/" + orgName;
@@ -893,7 +937,9 @@ const orgUrl = "https://dev.azure.com/" + orgName;
 const domainsManager = new DomainsManager(argv.domains);
 export const enabledDomains = domainsManager.getEnabledDomains();
 ```
+
 with:
+
 ```ts
 const positional = argv.organization as string;
 const deployment = resolveDeployment(positional, argv["api-version"] as string | undefined);
@@ -911,24 +957,30 @@ const authType = resolveAuthentication(argv.authentication as string | undefined
 - [ ] **Step 4: Use `authType` and skip tenant lookup in `main()`**
 
 In `main()`:
+
 - Replace every use of `argv.authentication` with `authType` (the `logger.info` field, the `createAuthenticator(...)` call, the `if (argv.authentication === "pat")` guard, and the `getAzureDevOpsClient(..., argv.authentication)` call).
 - Replace the tenant line:
+
 ```ts
-  const tenantId = (await getOrgTenant(orgName)) ?? argv.tenant;
+const tenantId = (await getOrgTenant(orgName)) ?? argv.tenant;
 ```
+
 with:
+
 ```ts
-  const tenantId = deployment.isOnPrem ? undefined : ((await getOrgTenant(orgName)) ?? (argv.tenant as string | undefined));
+const tenantId = deployment.isOnPrem ? undefined : ((await getOrgTenant(orgName)) ?? (argv.tenant as string | undefined));
 ```
 
 - [ ] **Step 5: Build and smoke-test**
 
 Run:
+
 ```bash
 npm run build
 node dist/index.js --help
 node dist/index.js https://tfs.contoso.com/DefaultCollection --authentication interactive 2>&1 | head -5
 ```
+
 Expected: `--help` shows `--api-version`. The second invocation exits with the on-prem PAT error from `resolveAuthentication` (proves the guard fires). A bare-name cloud invocation must still start as before.
 
 - [ ] **Step 6: Full test suite + lint**
@@ -948,6 +1000,7 @@ git commit -m "Wire deployment resolution and on-prem auth into startup"
 ## Task 10: Documentation
 
 **Files:**
+
 - Modify: `docs/FAQ.md` (the on-prem Q&A), `docs/GETTINGSTARTED.md` (on-prem invocation)
 
 - [ ] **Step 1: Update the FAQ**
@@ -987,4 +1040,7 @@ git commit -m "Document on-prem support and limitations"
 - **Type consistency:** `getApiVersion()`/`getCommentsApiVersion()`/`getSearchBaseUrl()`/`getIdentitiesBaseUrl()`/`getOrgIdentity()`/`resolveDeployment()`/`resolveAuthentication()`/`setDeployment()`/`getDeployment()` are named identically across all referencing tasks. `DeploymentConfig` fields (`isOnPrem`, `baseUrl`, `orgIdentifier`, `apiVersion`, `commentsApiVersion`) are consistent.
 - **Refinement vs spec:** on-prem default API version is **7.0** (verified Server 2022 RTW), not 7.1 as the spec first assumed; comments on-prem use `7.1-preview.4` with the `format` param omitted.
 - **Known caveat carried forward:** the modern comments resource is preview-only even on-prem; on Server 2022 RTW (7.0) the `7.1-preview.4` comment endpoint may not exist. Documented, not coded around (out of scope: System.History fallback).
+
+```
+
 ```

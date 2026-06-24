@@ -19,8 +19,6 @@ const CLOUD_COMMENTS_API_VERSION = "7.2-preview.4";
 const ONPREM_DEFAULT_API_VERSION = "7.0";
 const ONPREM_COMMENTS_API_VERSION = "7.1-preview.4";
 
-const ENTRA_AUTH_TYPES = new Set(["interactive", "azcli", "env"]);
-
 const DEFAULT_CLOUD: DeploymentConfig = {
   isOnPrem: false,
   baseUrl: "",
@@ -94,6 +92,3 @@ export function setDeployment(config: DeploymentConfig): void {
 export function getDeployment(): DeploymentConfig {
   return active ?? DEFAULT_CLOUD;
 }
-
-// Exported for tests that need to assert the Entra set.
-export { ENTRA_AUTH_TYPES };

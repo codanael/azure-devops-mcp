@@ -24,13 +24,13 @@ The FAQ currently claims on-prem is unsupported due to "missing API endpoints." 
 
 ## Decisions
 
-| Area | Decision |
-|---|---|
-| Compatibility | **Dual-mode, additive.** Cloud behavior is unchanged; on-prem is opt-in. Changes stay minimal so the fork can keep merging from upstream. |
-| Invocation | **Auto-detect positional arg.** If the positional argument parses as a URL, on-prem mode is implied; a bare name remains cloud (unchanged). |
-| Auth | **PAT only.** On-prem implies `--authentication pat`. Entra-based modes (`interactive`/`azcli`/`env`) warn (and are rejected) when an on-prem URL is given. NTLM/Kerberos is out of scope. |
-| API version | Cloud keeps `7.2-preview.*`. On-prem defaults to stable **`7.1`** (targets Azure DevOps Server 2019/2020/2022), overridable via `--api-version` / env. |
-| Cloud-only tools | On-prem **auto-disables Advanced Security**, and **rewrites Search + Identities** to use the collection host instead of `almsearch`/`vssps` subdomains. |
+| Area             | Decision                                                                                                                                                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Compatibility    | **Dual-mode, additive.** Cloud behavior is unchanged; on-prem is opt-in. Changes stay minimal so the fork can keep merging from upstream.                                                  |
+| Invocation       | **Auto-detect positional arg.** If the positional argument parses as a URL, on-prem mode is implied; a bare name remains cloud (unchanged).                                                |
+| Auth             | **PAT only.** On-prem implies `--authentication pat`. Entra-based modes (`interactive`/`azcli`/`env`) warn (and are rejected) when an on-prem URL is given. NTLM/Kerberos is out of scope. |
+| API version      | Cloud keeps `7.2-preview.*`. On-prem defaults to stable **`7.1`** (targets Azure DevOps Server 2019/2020/2022), overridable via `--api-version` / env.                                     |
+| Cloud-only tools | On-prem **auto-disables Advanced Security**, and **rewrites Search + Identities** to use the collection host instead of `almsearch`/`vssps` subdomains.                                    |
 
 ## Architecture
 
