@@ -18,6 +18,7 @@ npm run eslint           # lint; eslint-fix to autofix
 npm run format           # prettier --write .  (format-check to verify; CI enforces this)
 npm run validate-tools   # tsc --noEmit + validate all MCP tool/param names
 npm run inspect          # run built server under @modelcontextprotocol/inspector
+npm run package          # build, then bun --compile to dist/bin/ (Linux x64 + Windows x64 binaries)
 ```
 
 Run the built server: `node dist/index.js <organization-or-collection-url> [--domains ...] [--authentication ...] [--api-version ...]`.
